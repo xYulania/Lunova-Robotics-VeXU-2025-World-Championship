@@ -28,6 +28,22 @@ rightMotors = MotorGroup(frontRightMotor, topFrontRightMotor, backRightMotor, to
 
 allMotors = MotorGroup(frontLeftMotor, topFrontLeftMotor, backLeftMotor, topBackLeftMotor, frontRightMotor, topFrontRightMotor, backRightMotor, topBackRightMotor)
 
+inertial = Inertial(Ports.PORT9)
+
+def calibrateInertialSensor():
+    while True:
+        inertial.calibrate()
+
+        if inertial.is_calibrating():
+            controller.screen.clear_line(3)
+            controller.screen.print("Calibrating")
+        else:
+            controller.screen.print("Done")
+            controller.rumble("...")
+            wait(10, MSEC)
+
+def preAuton():
+    calibrateInertialSensor()
 
 def autonomous():
     brain.screen.clear_screen()
