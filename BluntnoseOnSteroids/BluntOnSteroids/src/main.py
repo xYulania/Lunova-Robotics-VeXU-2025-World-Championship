@@ -13,37 +13,30 @@ from vex import *
 brain = Brain()
 controller = Controller()
 
-frontLeftMotor = Motor(Ports.PORT1, GearSetting.RATIO_6_1, True)
-topFrontLeftMotor = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
-backLeftMotor = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
-topBackLeftMotor = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
+frontLeftMotor = Motor(Ports.PORT13, GearSetting.RATIO_6_1, True)
+topFrontLeftMotor = Motor(Ports.PORT14, GearSetting.RATIO_6_1, False)
+backLeftMotor = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
+topBackLeftMotor = Motor(Ports.PORT12, GearSetting.RATIO_6_1, False)
 
-frontRightMotor = Motor(Ports.PORT5, GearSetting.RATIO_6_1, False)
-topFrontRightMotor = Motor(Ports.PORT6, GearSetting.RATIO_6_1, True)
-backRightMotor = Motor(Ports.PORT7, GearSetting.RATIO_6_1,False)
-topBackRightMotor = Motor(Ports.PORT8, GearSetting.RATIO_6_1, True)
+frontRightMotor = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
+topFrontRightMotor = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
+backRightMotor = Motor(Ports.PORT1, GearSetting.RATIO_6_1,True)
+topBackRightMotor = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
 
 leftMotors = MotorGroup(frontLeftMotor, topFrontLeftMotor, backLeftMotor, topBackLeftMotor)
 rightMotors = MotorGroup(frontRightMotor, topFrontRightMotor, backRightMotor, topBackRightMotor)
 
 allMotors = MotorGroup(frontLeftMotor, topFrontLeftMotor, backLeftMotor, topBackLeftMotor, frontRightMotor, topFrontRightMotor, backRightMotor, topBackRightMotor)
 
-inertial = Inertial(Ports.PORT9)
 
-def calibrateInertialSensor():
-    while True:
-        inertial.calibrate()
+intake = Motor(Ports.PORT17, GearSetting.RATIO_18_1, False)
+intake.set_velocity(200, RPM)
 
-        if inertial.is_calibrating():
-            controller.screen.clear_line(3)
-            controller.screen.print("Calibrating")
-        else:
-            controller.screen.print("Done")
-            controller.rumble("...")
-            wait(10, MSEC)
+frontIntake = Motor(Ports.PORT18)
 
-def preAuton():
-    calibrateInertialSensor()
+digOut = DigitalOut(brain.three_wire_port.g)
+digOut.set(True)
+
 
 def autonomous():
     brain.screen.clear_screen()
@@ -59,11 +52,35 @@ def user_control():
         ForwardBackwardJS = (controller.axis3.position() / 100) * maxRPM
         TurningJS = (controller.axis1.position() / 100) * maxRPM
 
-        leftJSspeed = ForwardBackwardJS - TurningJS
-        rightJSspeed = ForwardBackwardJS + TurningJS
+        leftJSspeed = ForwardBackwardJS + TurningJS
+        rightJSspeed = TurningJS - ForwardBackwardJS
 
-        leftMotors.spin(FORWARD, leftJSspeed, RPM)
         rightMotors.spin(FORWARD, rightJSspeed, RPM)
+        leftMotors.spin(FORWARD, leftJSspeed, RPM)
+
+
+        maxIntakeRPM = 150
+        intakeInOut = (controller.buttonL2.pressing() - controller.buttonR2.pressing()) * maxIntakeRPM
+        intake.spin(FORWARD, intakeInOut, RPM)
+
+        maxFrontIntakeRPM = 200
+        frontIntakeInOut = (controller.buttonL1.pressing() - controller.buttonR1.pressing()) * maxFrontIntakeRPM
+        frontIntake.spin(FORWARD, frontIntakeInOut, RPM)
+
+
+        if controller.buttonUp.pressing() and not buttonUpState:
+            digOutState = not digOutState
+            digOut.set(digOutState)
+            if digOutState:
+                brain.screen.set_cursor(3, 1)
+                brain.screen.print("Pneumatic Opened")
+            else:
+                brain.screen.set_cursor(3, 1)
+                brain.screen.print("Pneumatic Closed")
+            buttonUpState = True
+
+        if not controller.buttonUp.pressing():
+            buttonUpState = False
 
         wait(20, MSEC)
 
