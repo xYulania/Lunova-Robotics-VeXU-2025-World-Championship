@@ -13,15 +13,15 @@ from vex import *
 brain = Brain()
 controller = Controller()
 
-frontLeftMotor = Motor(Ports.PORT13, GearSetting.RATIO_6_1, True)
-topFrontLeftMotor = Motor(Ports.PORT14, GearSetting.RATIO_6_1, False)
-backLeftMotor = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
-topBackLeftMotor = Motor(Ports.PORT12, GearSetting.RATIO_6_1, False)
+frontLeftMotor = Motor(Ports.PORT17, GearSetting.RATIO_6_1, True)
+topFrontLeftMotor = Motor(Ports.PORT18, GearSetting.RATIO_6_1, False)
+backLeftMotor = Motor(Ports.PORT19, GearSetting.RATIO_6_1, True)
+topBackLeftMotor = Motor(Ports.PORT20, GearSetting.RATIO_6_1, False)
 
-frontRightMotor = Motor(Ports.PORT3, GearSetting.RATIO_6_1, True)
-topFrontRightMotor = Motor(Ports.PORT4, GearSetting.RATIO_6_1, False)
-backRightMotor = Motor(Ports.PORT1, GearSetting.RATIO_6_1,True)
-topBackRightMotor = Motor(Ports.PORT2, GearSetting.RATIO_6_1, False)
+frontRightMotor = Motor(Ports.PORT11, GearSetting.RATIO_6_1, True)
+topFrontRightMotor = Motor(Ports.PORT12, GearSetting.RATIO_6_1, False)
+backRightMotor = Motor(Ports.PORT13, GearSetting.RATIO_6_1,True)
+topBackRightMotor = Motor(Ports.PORT14, GearSetting.RATIO_6_1, False)
 
 leftMotors = MotorGroup(frontLeftMotor, topFrontLeftMotor, backLeftMotor, topBackLeftMotor)
 rightMotors = MotorGroup(frontRightMotor, topFrontRightMotor, backRightMotor, topBackRightMotor)
@@ -29,14 +29,16 @@ rightMotors = MotorGroup(frontRightMotor, topFrontRightMotor, backRightMotor, to
 allMotors = MotorGroup(frontLeftMotor, topFrontLeftMotor, backLeftMotor, topBackLeftMotor, frontRightMotor, topFrontRightMotor, backRightMotor, topBackRightMotor)
 
 
-intake = Motor(Ports.PORT17, GearSetting.RATIO_18_1, False)
+intake = Motor(Ports.PORT16, GearSetting.RATIO_18_1, False)
 intake.set_velocity(200, RPM)
 
-frontIntake = Motor(Ports.PORT18)
+frontIntake = Motor(Ports.PORT15)
 
-digOut = DigitalOut(brain.three_wire_port.g)
-digOut.set(True)
+digOut1 = DigitalOut(brain.three_wire_port.a)
+digOut1.set(False)
 
+digOut2 = DigitalOut(brain.three_wire_port.b)
+digOut2.set(False)
 
 def autonomous():
     brain.screen.clear_screen()
@@ -47,6 +49,13 @@ def user_control():
     brain.screen.clear_screen()
     brain.screen.print("driver control")
     # place driver control in this while loop
+
+    digOut1State = True
+    digOut2State = False
+    buttonUpState = False  
+    buttonDownState = False
+    # buttonState = False
+
     while True:
         maxRPM = 600
         ForwardBackwardJS = (controller.axis3.position() / 100) * maxRPM
@@ -69,9 +78,9 @@ def user_control():
 
 
         if controller.buttonUp.pressing() and not buttonUpState:
-            digOutState = not digOutState
-            digOut.set(digOutState)
-            if digOutState:
+            digOut1State = not digOut1State
+            digOut1.set(digOut1State)
+            if digOut1State:
                 brain.screen.set_cursor(3, 1)
                 brain.screen.print("Pneumatic Opened")
             else:
@@ -81,6 +90,20 @@ def user_control():
 
         if not controller.buttonUp.pressing():
             buttonUpState = False
+
+        if controller.buttonDown.pressing() and not buttonDownState:
+            digOut2State = not digOut2State
+            digOut2.set(digOut2State)
+            if digOut2State:
+                brain.screen.set_cursor(4, 1)
+                brain.screen.print("Pneumatic Opened")
+            else:
+                brain.screen.set_cursor(4, 1)
+                brain.screen.print("Pneumatic Closed")
+            buttonDownState = True
+        
+        if not controller.buttonDown.pressing():
+            buttonDownState = False
 
         wait(20, MSEC)
 
