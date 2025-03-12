@@ -34,11 +34,16 @@ intake.set_velocity(200, RPM)
 
 frontIntake = Motor(Ports.PORT15)
 
+climbLeft = Motor(Ports.PORT2, GearSetting.RATIO_36_1, False)
+climbRight = Motor(Ports.PORT3, GearSetting.RATIO_36_1, True)
+
+climb = MotorGroup(climbLeft, climbRight)
+
 digOut1 = DigitalOut(brain.three_wire_port.a)
-digOut1.set(False)
+digOut1.set(True)
 
 digOut2 = DigitalOut(brain.three_wire_port.b)
-digOut2.set(False)
+digOut2.set(True)
 
 def autonomous():
     brain.screen.clear_screen()
@@ -51,10 +56,8 @@ def user_control():
     # place driver control in this while loop
 
     digOut1State = True
-    digOut2State = False
-    buttonUpState = False  
-    buttonDownState = False
-    # buttonState = False
+    digOut2State = True
+    buttonState = False
 
     while True:
         maxRPM = 600
@@ -76,34 +79,27 @@ def user_control():
         frontIntakeInOut = (controller.buttonL1.pressing() - controller.buttonR1.pressing()) * maxFrontIntakeRPM
         frontIntake.spin(FORWARD, frontIntakeInOut, RPM)
 
+        # climbRPM = 100
+    
+        # climbState = False
+        if controller.buttonA.pressing():
+            # climb.spin(FORWARD, 100, RPM)
+            climbLeft.spin(FORWARD, 100, RPM)
+            climbRight.spin(FORWARD, 100, RPM)
 
-        if controller.buttonUp.pressing() and not buttonUpState:
+        if not controller.buttonA.pressing():
+            climbState = False
+
+
+        if controller.buttonRight.pressing() and not buttonState:
             digOut1State = not digOut1State
-            digOut1.set(digOut1State)
-            if digOut1State:
-                brain.screen.set_cursor(3, 1)
-                brain.screen.print("Pneumatic Opened")
-            else:
-                brain.screen.set_cursor(3, 1)
-                brain.screen.print("Pneumatic Closed")
-            buttonUpState = True
-
-        if not controller.buttonUp.pressing():
-            buttonUpState = False
-
-        if controller.buttonDown.pressing() and not buttonDownState:
             digOut2State = not digOut2State
+            digOut1.set(digOut1State)
             digOut2.set(digOut2State)
-            if digOut2State:
-                brain.screen.set_cursor(4, 1)
-                brain.screen.print("Pneumatic Opened")
-            else:
-                brain.screen.set_cursor(4, 1)
-                brain.screen.print("Pneumatic Closed")
-            buttonDownState = True
-        
-        if not controller.buttonDown.pressing():
-            buttonDownState = False
+            buttonState = True
+            
+            if not controller.buttonRight.pressing():
+                buttonState = False
 
         wait(20, MSEC)
 
@@ -112,3 +108,38 @@ comp = Competition(user_control, autonomous)
 
 # actions to do when the program starts
 brain.screen.clear_screen()
+
+                                                    # ARCHIVE
+
+
+        # buttonUpState = False  
+        # buttonDownState = False
+
+        # if controller.buttonUp.pressing() and not buttonUpState:
+        #     digOut1State = not digOut1State
+        #     digOut1.set(digOut1State)
+        #     if digOut1State:
+        #         brain.screen.set_cursor(3, 1)
+        #         brain.screen.print("Pneumatic Opened")
+        #     else:
+        #         brain.screen.set_cursor(3, 1)
+        #         brain.screen.print("Pneumatic Closed")
+        #     buttonUpState = True
+
+        # if not controller.buttonUp.pressing():
+        #     buttonUpState = False
+
+        # if controller.buttonDown.pressing() and not buttonDownState:
+        #     digOut2State = not digOut2State
+        #     digOut2.set(digOut2State)
+        #     if digOut2State:
+        #         brain.screen.set_cursor(4, 1)
+        #         brain.screen.print("Pneumatic Opened")
+        #     else:
+        #         brain.screen.set_cursor(4, 1)
+        #         brain.screen.print("Pneumatic Closed")
+        #     buttonDownState = True
+        
+        # if not controller.buttonDown.pressing():
+        #     buttonDownState = False
+
